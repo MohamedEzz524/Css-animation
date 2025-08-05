@@ -1,0 +1,58 @@
+{% comment %}
+  Snippet to handle customer metafield updates
+  Usage: Include this in your theme.liquid head section
+{% endcomment %}
+
+<script>
+window.updateCustomerMetafield = function(namespace, key, value) {
+  return new Promise((resolve, reject) => {
+    // Create form data for the customer update
+    const formData = new FormData();
+    
+    // Add CSRF token
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+    if (csrfToken) {
+      formData.append('authenticity_token', csrfToken);
+    }
+    
+    // Add metafield data
+    formData.append(`customer[metafields][${namespace}][${key}]`, value);
+    
+    // Use cart attributes as a workaround for customer metafield updates
+    fetch('/cart/update.js', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest'
+      },
+      body: JSON.stringify({
+        attributes: {
+          [`customer_${namespace}_${key}`]: value
+        }
+      })
+    })
+    .then(response => response.json())
+    .then(data => {
+      // Now update the actual customer metafield
+      return fetch('/account', {
+        method: 'POST',
+        body: formData,
+        headers: {
+          'X-Requested-With': 'XMLHttpRequest'
+        }
+      });
+    })
+    .then(response => {
+      if (response.ok) {
+        resolve(response);
+      } else {
+        throw new Error('Failed to update customer metafield');
+      }
+    })
+    .catch(error => {
+      console.error('Error updating customer metafield:', error);
+      reject(error);
+    });
+  });
+};
+</script>

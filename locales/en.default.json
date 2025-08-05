@@ -1,0 +1,15 @@
+{
+  "general": {
+    "wishlist": {
+      "empty_wishlist": "Your wishlist is empty",
+      "shop_all": "Shop All Products",
+      "logged_in_as": "Logged in as",
+      "wishlist_synced": "Your wishlist is synced across all your devices",
+      "guest_wishlist_notice": "You're browsing as a guest. Your wishlist is saved locally on this device.",
+      "login_to_sync": "Login to sync your wishlist across devices",
+      "add_to_wishlist": "Add to wishlist",
+      "remove_from_wishlist": "Remove from wishlist",
+      "browse_to_wishlist": "Browse to wishlist"
+    }
+  }
+}
