@@ -8,6 +8,9 @@ This guide explains how to implement a customer-aware wishlist system that works
 - **Logged-in Customers**: Wishlist stored in customer metafields (synced across devices)
 - **Seamless Sync**: Guest wishlist automatically merges with customer wishlist on login
 - **Multi-user Support**: Different customers on the same device see their own wishlists
+- **Complete Customer Isolation**: Each customer account maintains completely separate wishlist data
+- **Browser Fingerprinting**: Guest users get unique wishlists based on browser characteristics
+- **Automatic Cleanup**: Previous customer data is automatically cleared when new customer logs in
 - **Fallback Support**: Falls back to localStorage if metafield updates fail
 
 ## Prerequisites
@@ -16,8 +19,8 @@ This guide explains how to implement a customer-aware wishlist system that works
    - Navigate to Settings > Metafields > Customers
    - Click "Add definition"
    - Namespace: `custom`
-   - Key: `wishlist_products`
-   - Name: `Wishlist Products`
+   - Key: `wishlist`
+   - Name: `Wishlist`
    - Type: `Single line text`
    - Validation: JSON (optional)
 
@@ -79,14 +82,16 @@ Update your header to include the wishlist counter (already provided in your hea
 ## How It Works
 
 ### Guest Users
-- Wishlist items stored in `localStorage` with key `"wishlist"`
+- Wishlist items stored in `localStorage` with browser-fingerprint-based key
 - Data persists only on the current device/browser
+- Each browser session gets a unique wishlist (prevents cross-contamination)
 - Shows guest notice with login prompt
 
 ### Logged-in Customers
-- Wishlist items stored in customer metafield `custom.wishlist_products`
+- Wishlist items stored in customer metafield `custom.wishlist`
 - Data syncs across all devices where customer logs in
 - Shows customer name and sync confirmation
+- Each customer account has completely independent wishlist data
 
 ### Login/Logout Flow
 1. **Before Login**: Guest wishlist stored in `sessionStorage`

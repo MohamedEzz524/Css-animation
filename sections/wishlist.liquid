@@ -52,7 +52,7 @@
 <!-- Pass customer wishlist data to JavaScript -->
 <script>
   {% if customer %}
-    {% assign customer_wishlist = customer.metafields.custom.wishlist_products | default: '[]' %}
+    {% assign customer_wishlist = customer.metafields.custom.wishlist | default: '[]' %}
     window.customerWishlistData = {{ customer_wishlist | json }};
     window.Shopify = window.Shopify || {};
     window.Shopify.customer = {

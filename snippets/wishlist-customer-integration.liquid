@@ -20,7 +20,7 @@
     };
     
     // Pass customer wishlist data
-    {% assign customer_wishlist = customer.metafields.custom.wishlist_products | default: '[]' %}
+    {% assign customer_wishlist = customer.metafields.custom.wishlist | default: '[]' %}
     window.customerWishlistData = {{ customer_wishlist | json }};
   {% else %}
     window.customerWishlistData = '[]';
@@ -75,9 +75,9 @@
         const mergedWishlist = [...new Set([...customerItems, ...guestItems])];
         
         if (mergedWishlist.length > customerItems.length) {
-          // Update customer wishlist with merged items
-          if (window.updateCustomerMetafield) {
-            window.updateCustomerMetafield('custom', 'wishlist_products', JSON.stringify(mergedWishlist))
+                     // Update customer wishlist with merged items
+           if (window.updateCustomerMetafield) {
+             window.updateCustomerMetafield('custom', 'wishlist', JSON.stringify(mergedWishlist))
               .then(() => {
                 // Refresh the page to show updated wishlist
                 window.location.reload();
