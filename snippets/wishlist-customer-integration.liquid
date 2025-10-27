@@ -1,0 +1,127 @@
+{% comment %}
+  Wishlist Customer Integration Snippet
+  Include this in your theme.liquid file in the <head> section
+  This handles customer login/logout events and provides necessary data
+{% endcomment %}
+
+<!-- Include the metafield update helper -->
+{% render 'update-customer-metafield' %}
+
+<!-- Customer integration script -->
+<script>
+  // Set up customer data globally
+  {% if customer %}
+    window.Shopify = window.Shopify || {};
+    window.Shopify.customer = {
+      id: {{ customer.id | json }},
+      email: {{ customer.email | json }},
+      first_name: {{ customer.first_name | json }},
+      last_name: {{ customer.last_name | json }}
+    };
+    
+    // Pass customer wishlist data
+    {% assign customer_wishlist = customer.metafields.custom.wishlist | default: '[]' %}
+    window.customerWishlistData = {{ customer_wishlist | json }};
+  {% else %}
+    window.customerWishlistData = '[]';
+  {% endif %}
+
+  // Handle customer login/logout events
+  document.addEventListener('DOMContentLoaded', function() {
+    // Check for login/logout URL parameters or session changes
+    const urlParams = new URLSearchParams(window.location.search);
+    const customerReturn = urlParams.get('customer_posted');
+    const customerLoggedOut = window.location.pathname === '/account/logout';
+    
+    // Dispatch custom events for login/logout
+    if (customerReturn === 'true' && window.Shopify && window.Shopify.customer) {
+      document.dispatchEvent(new CustomEvent('customer:login'));
+    }
+    
+    if (customerLoggedOut || (!window.Shopify || !window.Shopify.customer)) {
+      document.dispatchEvent(new CustomEvent('customer:logout'));
+    }
+    
+    // Listen for form submissions on login/logout forms
+    const loginForms = document.querySelectorAll('form[action*="/account/login"]');
+    const logoutLinks = document.querySelectorAll('a[href*="/account/logout"]');
+    
+    loginForms.forEach(form => {
+      form.addEventListener('submit', function() {
+        // Store current guest wishlist before login
+        const guestWishlist = localStorage.getItem('wishlist');
+        if (guestWishlist) {
+          sessionStorage.setItem('pre_login_wishlist', guestWishlist);
+        }
+      });
+    });
+    
+    logoutLinks.forEach(link => {
+      link.addEventListener('click', function() {
+        // Clear customer data on logout
+        localStorage.removeItem('wishlist');
+        sessionStorage.removeItem('pre_login_wishlist');
+        document.dispatchEvent(new CustomEvent('customer:logout'));
+      });
+    });
+    
+    // Handle post-login wishlist sync
+    const preLoginWishlist = sessionStorage.getItem('pre_login_wishlist');
+    if (preLoginWishlist && window.Shopify && window.Shopify.customer) {
+      // Merge pre-login wishlist with customer wishlist
+      try {
+        const guestItems = JSON.parse(preLoginWishlist);
+        const customerItems = JSON.parse(window.customerWishlistData || '[]');
+        const mergedWishlist = [...new Set([...customerItems, ...guestItems])];
+        
+        if (mergedWishlist.length > customerItems.length) {
+                     // Update customer wishlist with merged items
+           if (window.updateCustomerMetafield) {
+             window.updateCustomerMetafield('custom', 'wishlist', JSON.stringify(mergedWishlist))
+              .then(() => {
+                // Refresh the page to show updated wishlist
+                window.location.reload();
+              });
+          }
+        }
+        
+        // Clear the temporary storage
+        sessionStorage.removeItem('pre_login_wishlist');
+      } catch (error) {
+        console.error('Error syncing wishlist after login:', error);
+      }
+    }
+  });
+</script>
+
+<!-- Add necessary CSS for customer info sections -->
+<style>
+  .wishlist-user-info,
+  .wishlist-guest-info {
+    text-align: center;
+    margin-bottom: 2rem;
+    padding: 1rem;
+    border-radius: 8px;
+  }
+
+  .wishlist-user-info {
+    background-color: rgba(var(--color-button), 0.1);
+    border: 1px solid rgba(var(--color-button), 0.2);
+  }
+
+  .wishlist-guest-info {
+    background-color: rgba(var(--color-foreground), 0.05);
+    border: 1px solid rgba(var(--color-foreground), 0.1);
+  }
+
+  .wishlist-login-link {
+    color: rgb(var(--color-button));
+    text-decoration: underline;
+    font-weight: 500;
+    margin-left: 0.5rem;
+  }
+
+  .wishlist-login-link:hover {
+    text-decoration: none;
+  }
+</style>
